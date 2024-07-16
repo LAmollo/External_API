@@ -1,5 +1,6 @@
-import * as bootstrap from "bootstrap";
-import { favourite } from "./index.js";
+// Carousel.js
+
+import axios from './axiosHandler';
 
 export function createCarouselItem(imgSrc, imgAlt, imgId) {
   const template = document.querySelector("#carouselItemTemplate");
@@ -34,9 +35,7 @@ export function appendCarousel(element) {
 }
 
 export function start() {
-  const multipleCardCarousel = document.querySelector(
-    "#carouselExampleControls"
-  );
+  const multipleCardCarousel = document.querySelector("#carouselExampleControls");
   if (window.matchMedia("(min-width: 768px)").matches) {
     const carousel = new bootstrap.Carousel(multipleCardCarousel, {
       interval: false
@@ -45,32 +44,43 @@ export function start() {
     const cardWidth = $(".carousel-item").width();
     let scrollPosition = 0;
     $("#carouselExampleControls .carousel-control-next").unbind();
-    $("#carouselExampleControls .carousel-control-next").on(
-      "click",
-      function () {
-        if (scrollPosition < carouselWidth - cardWidth * 4) {
-          scrollPosition += cardWidth;
-          $("#carouselExampleControls .carousel-inner").animate(
-            { scrollLeft: scrollPosition },
-            600
-          );
-        }
+    $("#carouselExampleControls .carousel-control-next").on("click", function () {
+      if (scrollPosition < carouselWidth - cardWidth * 4) {
+        scrollPosition += cardWidth;
+        $("#carouselExampleControls .carousel-inner").animate({ scrollLeft: scrollPosition }, 600);
       }
-    );
+    });
     $("#carouselExampleControls .carousel-control-prev").unbind();
-    $("#carouselExampleControls .carousel-control-prev").on(
-      "click",
-      function () {
-        if (scrollPosition > 0) {
-          scrollPosition -= cardWidth;
-          $("#carouselExampleControls .carousel-inner").animate(
-            { scrollLeft: scrollPosition },
-            600
-          );
-        }
+    $("#carouselExampleControls .carousel-control-prev").on("click", function () {
+      if (scrollPosition > 0) {
+        scrollPosition -= cardWidth;
+        $("#carouselExampleControls .carousel-inner").animate({ scrollLeft: scrollPosition }, 600);
       }
-    );
+    });
   } else {
     $(multipleCardCarousel).addClass("slide");
   }
+}
+
+export function favourite(imgId) {
+  axios.post('/favourites', { image_id: imgId })
+    .then(response => {
+      console.log('Image favorited:', response.data);
+      // Implement UI update or toggle favorite logic
+    })
+    .catch(error => {
+      if (error.response.status === 400) {
+        // If already favorited, delete favorite
+        axios.delete(`/favourites/${imgId}`)
+          .then(response => {
+            console.log('Favorite removed:', response.data);
+            // Implement UI update or toggle favorite logic
+          })
+          .catch(err => {
+            console.error('Error removing favorite:', err);
+          });
+      } else {
+        console.error('Error favoriting image:', error);
+      }
+    });
 }
